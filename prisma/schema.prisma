@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  studentId String?   @unique // Mã số sinh viên
+  username  String    @unique
+  avatarUrl String?
+  role      Role      @default(STUDENT)
+  posts     Post[]
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Course {
+  id        String   @id @default(uuid())
+  code      String   @unique // VD: IT001
+  name      String
+  faculty   String   // Khoa
+  posts     Post[]
+}
+
+model Post {
+  id          String     @id @default(uuid())
+  title       String
+  content     String
+  isAnonymous Boolean    @default(false)
+  
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  
+  courseId    String?
+  course      Course?    @relation(fields: [courseId], references: [id])
+  
+  comments    Comment[]
+  documents   Document[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  content     String
+  isAnonymous Boolean  @default(false)
+  
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id])
+  
+  createdAt   DateTime @default(now())
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  url       String   // Link Supabase Object Storage
+  fileName  String
+  size      Int      // Dung lượng file (bytes)
+  
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+}
