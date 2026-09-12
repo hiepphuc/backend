@@ -5,13 +5,15 @@ import { AppService } from './app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { CoursesModule } from './courses/courses.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { PostsModule } from './posts/posts.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     CoursesModule,
-    AuthModule
+    AuthModule,
+    PostsModule
   ],
   controllers: [AppController],
   providers: [AppService],
