@@ -17,10 +17,18 @@ enum Role {
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
-  studentId String?   @unique // Mã số sinh viên
+  studentId String?   @unique
   username  String    @unique
   avatarUrl String?
   role      Role      @default(STUDENT)
+  bio         String?
+  major       String?
+  githubUrl   String?
+  linkedinUrl String?
+  skills      String[]  // Mảng kỹ năng (VD: ["React", "Node.js", "Figma"])
+  
+  achievements Achievement[]
+  enrollments  Enrollment[]
   posts     Post[]
   comments  Comment[]
   createdAt DateTime  @default(now())
@@ -33,6 +41,7 @@ model Course {
   name      String
   faculty   String   // Khoa
   posts     Post[]
+  enrollments Enrollment[]
 }
 
 model Post {
@@ -76,4 +85,29 @@ model Document {
   
   postId    String
   post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Achievement {
+  id          String    @id @default(uuid())
+  title       String    // VD: "Giải Nhất Hackathon 2023"
+  description String?   
+  date        DateTime? 
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Enrollment {
+  id          String   @id @default(uuid())
+  semester    String   // VD: "HK1 2023-2024"
+  grade       String?  // VD: "A", "8.5"
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+
+  // Đảm bảo 1 user chỉ học 1 môn trong 1 học kỳ duy nhất
+  @@unique([userId, courseId, semester]) 
 }
