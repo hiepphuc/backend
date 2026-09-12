@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { CoursesModule } from './courses/courses.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { PostsModule } from './posts/posts.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { PostsModule } from './posts/posts.module.js';
     PrismaModule,
     CoursesModule,
     AuthModule,
-    PostsModule
+    PostsModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [AppService],
