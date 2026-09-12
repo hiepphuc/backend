@@ -7,6 +7,7 @@ import { CoursesModule } from './courses/courses.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { PostsModule } from './posts/posts.module.js';
 import { UsersModule } from './users/users.module.js';
+import { CommentsModule } from './comments/comments.module.js';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { UsersModule } from './users/users.module.js';
     CoursesModule,
     AuthModule,
     PostsModule,
-    UsersModule
+    UsersModule,
+    CommentsModule
   ],
   controllers: [AppController],
   providers: [AppService],
