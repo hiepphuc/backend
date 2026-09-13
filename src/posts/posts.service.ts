@@ -18,19 +18,23 @@ export class PostsService {
     });
   }
 
-  // Thêm tham số filter để lọc bài viết
-  async findAll(filter?: 'ALL' | 'DISCUSSION' | 'QA') {
+  async findAll(filter?: 'ALL' | 'DISCUSSION' | 'QA', page: number = 1, limit: number = 5) {
     const whereClause = filter && filter !== 'ALL' ? { type: filter } : {};
+
+    // Công thức tính số bài cần bỏ qua (Ví dụ: trang 2, limit 5 -> bỏ qua 5 bài đầu)
+    const skip = (page - 1) * limit;
 
     const posts = await this.prisma.post.findMany({
       where: whereClause,
+      orderBy: { createdAt: 'desc' }, // Luôn lấy bài mới nhất trước
+      take: limit,
+      skip: skip,
       include: {
         author: { select: { id: true, username: true, avatarUrl: true, role: true } },
         course: true,
-        reactions: true, // Kéo kèm data reactions
-        _count: { select: { comments: true } } // Đếm số lượng comment
+        reactions: true,
+        _count: { select: { comments: true } }
       },
-      orderBy: { createdAt: 'desc' },
     });
 
     return posts.map(post => {

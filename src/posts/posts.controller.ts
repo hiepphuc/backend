@@ -16,8 +16,15 @@ export class PostsController {
   }
 
   @Get()
-  findAll(@Query('filter') filter?: 'ALL' | 'DISCUSSION' | 'QA') {
-    return this.postsService.findAll(filter);
+  findAll(
+    @Query('filter') filter?: 'ALL' | 'DISCUSSION' | 'QA',
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 5;
+
+    return this.postsService.findAll(filter, pageNumber, limitNumber);
   }
 
   // API Đẩy Reaction
