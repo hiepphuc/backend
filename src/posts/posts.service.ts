@@ -5,43 +5,66 @@ import { PrismaService } from '../prisma/prisma.service.js';
 export class PostsService {
   constructor(private prisma: PrismaService) { }
 
-  async create(data: { title: string; content: string; isAnonymous: boolean; courseId?: string }, authorId: string) {
+  async create(data: { title: string; content: string; isAnonymous: boolean; type: 'DISCUSSION' | 'QA'; courseId?: string }, authorId: string) {
     return this.prisma.post.create({
       data: {
         title: data.title,
         content: data.content,
         isAnonymous: data.isAnonymous,
+        type: data.type,
         courseId: data.courseId || null,
         authorId: authorId,
       },
     });
   }
 
-  async findAll() {
+  // Thêm tham số filter để lọc bài viết
+  async findAll(filter?: 'ALL' | 'DISCUSSION' | 'QA') {
+    const whereClause = filter && filter !== 'ALL' ? { type: filter } : {};
+
     const posts = await this.prisma.post.findMany({
+      where: whereClause,
       include: {
-        author: {
-          select: { id: true, username: true, avatarUrl: true, role: true },
-        },
+        author: { select: { id: true, username: true, avatarUrl: true, role: true } },
         course: true,
+        reactions: true, // Kéo kèm data reactions
+        _count: { select: { comments: true } } // Đếm số lượng comment
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Logic Ẩn danh: Ghi đè thông tin author nếu isAnonymous = true
     return posts.map(post => {
+      let finalAuthor = post.author;
       if (post.isAnonymous) {
-        return {
-          ...post,
-          author: {
-            id: 'hidden',
-            username: 'Sinh viên ẩn danh',
-            avatarUrl: null,
-            role: 'STUDENT',
-          },
-        };
+        finalAuthor = { id: 'hidden', username: 'Sinh viên ẩn danh', avatarUrl: null, role: 'STUDENT' };
       }
-      return post;
+      return { ...post, author: finalAuthor };
+    });
+  }
+
+  // Hàm xử lý "Thả cảm xúc" thông minh
+  async reactToPost(userId: string, postId: string, type: string) {
+    // Tìm xem user đã thả cảm xúc bài này chưa
+    const existing = await this.prisma.reaction.findUnique({
+      where: { userId_postId: { userId, postId } }
+    });
+
+    // 1. Nếu bấm lại đúng nút cũ -> Huỷ cảm xúc (Unlike/Unvote)
+    if (existing && existing.type === type) {
+      return this.prisma.reaction.delete({ where: { id: existing.id } });
+    }
+
+    // 2. Nếu bấm nút khác -> Cập nhật cảm xúc mới
+    if (existing) {
+      return this.prisma.reaction.update({
+        where: { id: existing.id },
+        data: { type: type as any }
+      });
+    }
+
+    // 3. Nếu chưa có -> Tạo mới
+    return this.prisma.reaction.create({
+      data: { userId, postId, type: type as any }
     });
   }
 }

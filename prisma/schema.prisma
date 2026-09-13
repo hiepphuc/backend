@@ -14,6 +14,20 @@ enum Role {
   ADMIN
 }
 
+enum PostType {
+  DISCUSSION  // Bài viết thông thường
+  QA          // Câu hỏi
+}
+
+enum ReactionType {
+  UPVOTE
+  DOWNVOTE
+  LIKE
+  INSIGHTFUL
+  CELEBRATE
+  FUNNY
+}
+
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
@@ -31,6 +45,8 @@ model User {
   enrollments  Enrollment[]
   posts     Post[]
   comments  Comment[]
+  reactions    Reaction[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -46,6 +62,7 @@ model Course {
 
 model Post {
   id          String     @id @default(uuid())
+  type        PostType   @default(DISCUSSION)
   title       String
   content     String
   isAnonymous Boolean    @default(false)
@@ -58,6 +75,7 @@ model Post {
   
   comments    Comment[]
   documents   Document[]
+  reactions   Reaction[]
   
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -110,4 +128,20 @@ model Enrollment {
 
   // Đảm bảo 1 user chỉ học 1 môn trong 1 học kỳ duy nhất
   @@unique([userId, courseId, semester]) 
+}
+
+model Reaction {
+  id        String       @id @default(uuid())
+  type      ReactionType
+  
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  
+  postId    String
+  post      Post         @relation(fields: [postId], references: [id])
+  
+  createdAt DateTime     @default(now())
+
+  // Đảm bảo 1 user chỉ có 1 reaction trên 1 bài viết tại 1 thời điểm
+  @@unique([userId, postId])
 }
